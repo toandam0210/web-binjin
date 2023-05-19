@@ -7,7 +7,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -21,7 +20,7 @@ import com.web.binjin.model.entity.Role;
 import com.web.binjin.model.entity.User;
 import com.web.binjin.model.payload.JwtResponse;
 import com.web.binjin.model.payload.LoginRequest;
-import com.web.binjin.model.payload.MessageResponse;
+import com.web.binjin.model.payload.ResponseData;
 import com.web.binjin.model.payload.SignupRequest;
 import com.web.binjin.repository.RoleRepository;
 import com.web.binjin.repository.UserRepository;
@@ -67,9 +66,31 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ResponseEntity<?> signup(SignupRequest signUpRequest) {
+	public void updateUser(UserDTO user) {
+		Optional<User> userOp = userRepository.findByUsername(user.getUsername());
+		if (userOp.isPresent()) {
+			User userUpdate = userOp.get();
+			userUpdate.setEmail(user.getEmail());
+			userUpdate.setPassword(encoder.encode(user.getPassword()));
+			Set<Role> roles = new HashSet<Role>();
+			user.getRoles().forEach(role -> {
+				Role roleInDb = roleRepository.findByName(ERole.valueOf(role))
+						.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+				roles.add(roleInDb);
+			});
+			userUpdate.setRoles(roles);
+			userUpdate.setRoles(roles);
+			userRepository.save(userUpdate);
+		}
+	}
+
+	@Override
+	public ResponseData<User> signup(SignupRequest signUpRequest) {
+		ResponseData<User> responseData = new ResponseData<>();
 		if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-			return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
+			responseData.setMessage("Error: Username is already taken!");
+			responseData.setStatus("NOT OK");
+			return responseData;
 		}
 
 		// Create new user's account
@@ -102,27 +123,10 @@ public class UserServiceImpl implements UserService {
 
 		user.setRoles(roles);
 		userRepository.save(user);
-
-		return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
-	}
-
-	@Override
-	public void updateUser(UserDTO user) {
-		Optional<User> userOp = userRepository.findByUsername(user.getUsername());
-		if (userOp.isPresent()) {
-			User userUpdate = userOp.get();
-			userUpdate.setEmail(user.getEmail());
-			userUpdate.setPassword(user.getPassword());
-			Set<Role> roles = new HashSet<Role>();
-			user.getRoles().forEach(role -> {
-				Role roleInDb = roleRepository.findByName(ERole.valueOf(role))
-						.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-				roles.add(roleInDb);
-			});
-			userUpdate.setRoles(roles);
-			userUpdate.setRoles(roles);
-			userRepository.save(userUpdate);
-		}
+		responseData.setData(userRepository.findByUsername(user.getUsername()).get());
+		responseData.setMessage("Register success");
+		responseData.setStatus("OK");
+		return responseData;
 	}
 
 }

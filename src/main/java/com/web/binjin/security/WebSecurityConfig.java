@@ -60,8 +60,8 @@ public class WebSecurityConfig {
     http.cors().and().csrf().disable()
         .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-        .authorizeRequests().antMatchers("/api/auth/login","/api/auth/signup").permitAll()
-        .antMatchers("/api/auth/admin/**").hasRole("ADMIN")
+        .authorizeRequests().antMatchers("/api/auth/user/**").permitAll()
+        .antMatchers("/api/auth/admin/updateuser").hasRole("ADMIN")
         .anyRequest().authenticated();
     
     http.authenticationProvider(authenticationProvider());
