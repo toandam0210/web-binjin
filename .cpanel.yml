@@ -1,5 +1,5 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/mhezonij/public-html/web-binjin
+    - export DEPLOYPATH=/home/mhezonij/repositories/web-binjin
     - /bin/cp *
