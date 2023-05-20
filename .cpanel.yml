@@ -2,4 +2,4 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/mhezonij/repositories/web-binjin
-    - /bin/cp -R images $DEPLOYPATH
+    - /bin/cp *
